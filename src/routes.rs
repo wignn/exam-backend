@@ -1,5 +1,4 @@
-use crate::handlers::auth::AuthHandlers;
-use crate::handlers::user::UserHandlers;
+use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers};
 use crate::middleware::auth::auth_middleware;
 use crate::{AppState, health_check};
 use axum::{
@@ -7,10 +6,7 @@ use axum::{
     routing::{get, post},
 };
 use tower::ServiceBuilder;
-use tower_http::{
-    cors::{CorsLayer},
-    trace::TraceLayer,
-};
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 pub fn create_routes(state: AppState, cors: CorsLayer) -> Router {
     Router::new()
@@ -27,7 +23,8 @@ pub fn create_routes(state: AppState, cors: CorsLayer) -> Router {
 fn api_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .nest("/auth", auth_routes())
-        .nest("/users", user_routes(state))
+        .nest("/users", user_routes(state.clone()))
+        .nest("/classes", classes_routes(state.clone()))
 }
 
 fn auth_routes() -> Router<AppState> {
@@ -44,6 +41,18 @@ fn user_routes(state: AppState) -> Router<AppState> {
         .route("/profile", post(UserHandlers::update_profile))
         .route("/verify-email", post(UserHandlers::verify_email))
         .route("/change-password", post(UserHandlers::change_password))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        ))
+}
+
+fn classes_routes(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/", post(ClassHandlers::create_class))
+        .route("/", get(ClassHandlers::get_classes))
+        .route("/{id}", get(ClassHandlers::get_class_by_id))
+
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,

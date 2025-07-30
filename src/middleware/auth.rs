@@ -10,6 +10,7 @@ use axum::{
 };
 use uuid::Uuid;
 
+
 #[derive(Debug, Clone)]
 pub struct AuthUser {
     pub id: Uuid,
@@ -71,9 +72,10 @@ fn extract_token_from_header(headers: &HeaderMap) -> Result<String, AppError> {
 macro_rules! require_role {
     ($auth_user:expr, $required_role:expr) => {
         match ($auth_user.role.clone(), $required_role) {
-            (UserRole::Admin, _) => Ok(()),
+            (crate::models::user::UserRole::Admin, _) => Ok(()),
             (role, required) if role == required => Ok(()),
-            _ => Err(AppError::Forbidden),
+            _ => Err(crate::errors::AppError::Forbidden),
         }
     };
 }
+
