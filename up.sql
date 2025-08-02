@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS class_members (
     );
 
 CREATE TABLE IF NOT EXISTS exams (
-                                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title            TEXT      NOT NULL,
     description      TEXT,
     created_by       UUID REFERENCES users (id),
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS exam_assignments (
     );
 
 CREATE TABLE IF NOT EXISTS questions (
-                                         id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     exam_id        UUID REFERENCES exams (id) ON DELETE CASCADE,
     question_text  TEXT          NOT NULL,
     question_type  question_type NOT NULL,
@@ -53,14 +53,14 @@ CREATE TABLE IF NOT EXISTS questions (
     );
 
 CREATE TABLE IF NOT EXISTS choices (
-                                       id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     question_id UUID REFERENCES questions (id) ON DELETE CASCADE,
     choice_text TEXT NOT NULL,
     is_correct  BOOLEAN DEFAULT FALSE
     );
 
 CREATE TABLE IF NOT EXISTS exam_attempts (
-                                             id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id      UUID REFERENCES users (id),
     exam_id      UUID REFERENCES exams (id),
     started_at   TIMESTAMPTZ,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
     );
 
 CREATE TABLE IF NOT EXISTS answers (
-                                       id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     attempt_id    UUID REFERENCES exam_attempts (id) ON DELETE CASCADE,
     question_id   UUID REFERENCES questions (id),
     answer_text   TEXT,

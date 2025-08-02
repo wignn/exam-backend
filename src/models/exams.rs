@@ -1,19 +1,8 @@
-/*
-CREATE TABLE IF NOT EXISTS exams (
-    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title            TEXT      NOT NULL,
-    description      TEXT,
-    created_by       UUID REFERENCES users (id),
-    duration_minutes INTEGER   NOT NULL,
-    start_time       TIMESTAMPTZ NOT NULL,
-    end_time         TIMESTAMPTZ NOT NULL,
-    is_active        BOOLEAN     DEFAULT TRUE
-    );
-*/
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
+use validator::{Validate};
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Exam {
@@ -26,25 +15,35 @@ pub struct Exam {
     pub end_time: DateTime<Utc>,
     pub is_active: bool,
 }
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct ExamRequest{
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateExamRequest {
+    #[validate(length(min = 1))]
     pub title: String,
+    #[validate(length(min = 1))]
     pub description: String,
+    #[validate(length(min = 1))]
     pub created_by: String,
+    #[validate(range(min = 1))]
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>
+    pub end_time: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct ExamUpdateRequest {
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateExamRequest {
+    #[validate(length(min = 1))]
     pub title: String,
+    #[validate(length(min = 1))]
     pub description: String,
+    pub is_active: bool,
+    #[validate(range(min = 1))]
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>
+    pub end_time: DateTime<Utc>,
 }
 
+#[derive(Debug, Serialize, Clone)]
 pub struct ExamResponse {
     pub id: Uuid,
     pub title: String,
@@ -66,23 +65,33 @@ impl From<Exam> for ExamResponse {
             duration_minutes: exam.duration_minutes,
             start_time: exam.start_time,
             end_time: exam.end_time,
-            is_active: exam.is_active
+            is_active: exam.is_active,
         }
     }
 }
 
-
-
-/**
-CREATE TABLE IF NOT EXISTS exam_assignments (
-    exam_id  UUID REFERENCES exams (id),
-    class_id UUID REFERENCES classes (id),
-    PRIMARY KEY (exam_id, class_id)
-    );
-*/
-
-#[derive(Deserialize, Debug)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ExamAssignments {
     pub exam_id: Uuid,
-    pub class_id: Uuid
+    pub class_id: Uuid,
+}
+#[derive(Debug, Deserialize, Clone)]
+pub struct CreateExamAssignmentRequest {
+    pub exam_id: Uuid,
+    pub class_id: Uuid,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ExamAssignmentsResponse {
+    pub exam_id: Uuid,
+    pub class_id: Uuid,
+}
+
+impl From<ExamAssignments> for ExamAssignmentsResponse {
+    fn from(e: ExamAssignments) -> Self {
+        Self {
+            exam_id: e.exam_id,
+            class_id: e.class_id,
+        }
+    }
 }
