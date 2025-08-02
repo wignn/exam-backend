@@ -70,3 +70,19 @@ impl From<Exam> for ExamResponse {
         }
     }
 }
+
+
+
+/**
+CREATE TABLE IF NOT EXISTS exam_assignments (
+    exam_id  UUID REFERENCES exams (id),
+    class_id UUID REFERENCES classes (id),
+    PRIMARY KEY (exam_id, class_id)
+    );
+*/
+
+#[derive(Deserialize, Debug)]
+pub struct ExamAssignments {
+    pub exam_id: Uuid,
+    pub class_id: Uuid
+}

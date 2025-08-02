@@ -20,9 +20,7 @@ impl ClassHandlers {
     pub async fn get_classes(State(state): State<AppState>) -> AppResult<Json<Value>> {
         let class_service = ClassService::new(state.db.clone());
         let class = class_service.get_classes().await?;
-        if class.is_empty() {
-            return Err(AppError::NotFound("class not found".to_string()));
-        }
+
         Ok(Json(json!({
             "message": "Classes retrieved successfully",
             "class": class
@@ -39,9 +37,13 @@ impl ClassHandlers {
             .map_err(|e| AppError::Validation(format!("Validation error: {}", e)))?;
         require_role!(auth_user, UserRole::Teacher)?;
         let class_service = ClassService::new(state.db.clone());
-        class_service.create_class(request).await?;
+        let class = class_service.create_class(request, auth_user.id).await?;
 
-        Ok(Json(json!({ "message": "Class created successfully" })))
+        Ok(Json(json!({
+
+            "message": "Class created successfully" ,
+            "class":  class
+        })))
     }
 
     pub async fn get_class_by_id(
@@ -65,7 +67,14 @@ impl ClassHandlers {
             .validate()
             .map_err(|e| AppError::Validation(format!("Validation error: {}", e)))?;
         let class_service = ClassService::new(state.db.clone());
-        let class = class_service.updat_class(class_id, request).await?;
+
+        let _exist = class_service
+            .get_class_by_id(class_id)
+            .await
+            .map_err(|_| AppError::NotFound("Class not found".to_string()))?;
+
+
+        let class = class_service.update_class(class_id, request).await?;
 
         Ok(Json(json!({
             "message":"Class update successfully",
@@ -78,6 +87,11 @@ impl ClassHandlers {
         Path(class_id): Path<Uuid>,
     ) -> AppResult<Json<Value>> {
         let class_service = ClassService::new(state.db.clone());
+        let _exist = class_service
+            .get_class_by_id(class_id)
+            .await
+            .map_err(|_| AppError::NotFound("Class not found".to_string()))?;
+
         class_service.delete_class(class_id).await?;
 
         Ok(Json(json!({
@@ -121,6 +135,7 @@ impl ClassHandlers {
             state.config.jwt_refresh_expires_in,
         );
         let class_service = ClassService::new(state.db.clone());
+
         let class_member = class_service
             .get_class_members_by_class_id(class_id)
             .await?;

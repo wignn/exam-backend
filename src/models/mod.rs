@@ -1,3 +1,3 @@
 pub mod user;
 pub mod class;
-mod exams;
+pub mod exams;
