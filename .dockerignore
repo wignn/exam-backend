@@ -1,0 +1,49 @@
+# Rust build artifacts
+target/
+Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# Test files
+tests/
+
+# Backup files
+*~
+*.bak
+
+# Node modules (if any)
+node_modules/
+
+# Database files
+*.db
+*.sqlite
+
+# Temporary files
+tmp/
+temp/

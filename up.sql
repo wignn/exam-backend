@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS class_members (
     );
 
 CREATE TABLE IF NOT EXISTS exams (
-    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title            TEXT      NOT NULL,
     description      TEXT,
     created_by       UUID REFERENCES users (id),
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS exams (
     );
 
 CREATE TABLE IF NOT EXISTS exam_assignments (
-                                                exam_id  UUID REFERENCES exams (id),
+    exam_id  UUID REFERENCES exams (id),
     class_id UUID REFERENCES classes (id),
     PRIMARY KEY (exam_id, class_id)
     );
@@ -78,7 +78,6 @@ CREATE TABLE IF NOT EXISTS answers (
     );
 
 
-);
 
 
 ALTER TABLE users
