@@ -1,10 +1,11 @@
 use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers};
 use crate::middleware::auth::auth_middleware;
-use crate::{AppState, health_check};
+use crate::{AppState};
 use axum::{
     Router,
     routing::{get, post},
 };
+use axum::routing::{delete, put};
 use tower::ServiceBuilder;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
@@ -51,10 +52,17 @@ fn classes_routes(state: AppState) -> Router<AppState> {
     Router::new()
         .route("/", post(ClassHandlers::create_class))
         .route("/", get(ClassHandlers::get_classes))
-        .route("/{id}", get(ClassHandlers::get_class_by_id))
-
+        .route("/{class_id}", get(ClassHandlers::get_class_by_id))
+        .route("/{class_id}", put(ClassHandlers::update_class))
+        .route("/{class_id}", delete(ClassHandlers::delete_class))
+        .route("/member", post(ClassHandlers::create_class_member))
+        .route("/member", delete(ClassHandlers::delete_class_member))
+        .route("/member/{class_id}", get(ClassHandlers::get_class_member_by_class_id))
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,
         ))
+}
+async fn health_check() -> &'static str {
+    "OK"
 }
