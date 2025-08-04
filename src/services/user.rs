@@ -166,8 +166,7 @@ impl UserService {
             SELECT id, name, email, password, is_active, is_verified, role, created_at, updated_at
             FROM users
             WHERE id = $1
-            "#
-        )
+            "#)
             .bind(user_id)
             .fetch_optional(&self.db.pool)
             .await?

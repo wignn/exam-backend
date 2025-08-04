@@ -39,10 +39,10 @@ pub struct ClassMember {
 
 
 impl From<ClassMember> for ClassMemberResponse {
-    fn from(classmember: ClassMember) -> Self {
+    fn from(e: ClassMember) -> Self {
         Self{
-            class_id: classmember.class_id,
-            user_id: classmember.user_id
+            class_id: e.class_id,
+            user_id: e.user_id
         }
     }
 }
