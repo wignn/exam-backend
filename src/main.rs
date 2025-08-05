@@ -57,8 +57,11 @@ async fn main() -> anyhow::Result<()> {
     // Build the router
     let app = routes::create_routes(state.clone(), cors);
 
+    
     // Start server
-    let addr = "0.0.0.0:3000";
+    let addr: std::net::SocketAddr = format!("{}:{}", state.config.server_host, state.config.server_port)
+        .parse()
+        .expect("Invalid server address");
     tracing::info!("Server running on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
