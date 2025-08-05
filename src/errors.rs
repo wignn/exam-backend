@@ -20,11 +20,11 @@ pub enum AppError {
     Bcrypt(#[from] bcrypt::BcryptError),
 
     #[error("Validation error")]
-    ValidationError(#[from] ValidationErrors), // Tambah ini
+    ValidationError(#[from] ValidationErrors), 
 
     #[error("JSON parsing error: {0}")]
-    JsonRejection(#[from] JsonRejection), // Tambah ini
-
+    JsonRejection(#[from] JsonRejection),
+ 
     #[error("Validation error: {0}")]
     Validation(String),
 

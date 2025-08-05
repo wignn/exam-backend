@@ -98,14 +98,14 @@ fn exam_attempts_routes(state: AppState) -> Router<AppState> {
 
 fn questions_routes(state: AppState) -> Router<AppState> {
     Router::new()
-        .route("/exam/{exam_id}", post(QuestionHandler::create_question)) // Create question for exam
-        .route("/exam/{exam_id}/teacher", get(QuestionHandler::get_questions_by_exam)) // Teacher view with answers
-        .route("/exam/{exam_id}/student", get(QuestionHandler::get_questions_for_student)) // Student view
-        .route("/{question_id}", get(QuestionHandler::get_question_by_id)) // Get single question
-        .route("/{question_id}", put(QuestionHandler::update_question)) // Update question
-        .route("/{question_id}", delete(QuestionHandler::delete_question)) // Delete question
-        .route("/bulk", post(QuestionHandler::bulk_create_questions)) // Bulk create questions
-        .route("/exam/{exam_id}/total-score", get(QuestionHandler::get_exam_total_score)) // Get total score
+        .route("/exam/{exam_id}", post(QuestionHandler::create_question)) 
+        .route("/exam/{exam_id}/teacher", get(QuestionHandler::get_questions_by_exam)) 
+        .route("/exam/{exam_id}/student", get(QuestionHandler::get_questions_for_student)) 
+        .route("/{question_id}", get(QuestionHandler::get_question_by_id)) 
+        .route("/{question_id}", put(QuestionHandler::update_question)) 
+        .route("/{question_id}", delete(QuestionHandler::delete_question))
+        .route("/bulk", post(QuestionHandler::bulk_create_questions)) 
+        .route("/exam/{exam_id}/total-score", get(QuestionHandler::get_exam_total_score)) 
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,
