@@ -8,6 +8,7 @@ use chrono::Utc;
 use sqlx::Row;
 use sqlx::postgres::PgRow;
 use uuid::Uuid;
+use crate::utils::pagination;
 
 pub struct ClassService {
     db: Database,
@@ -40,6 +41,23 @@ impl ClassService {
         let rows = sqlx::query(r#"SELECT id, name, created_by, created_at FROM classes"#)
             .fetch_all(&self.db.pool)
             .await?;
+
+        let classes = rows
+            .into_iter()
+            .map(|row| self.row_to_class(row).unwrap().into())
+            .collect();
+
+        Ok(classes)
+    }
+
+    pub async fn get_classes_paged(&self, pagination: &pagination::Pagination) -> AppResult<Vec<ClassResponse>> {
+        let rows = sqlx::query(
+            r#"SELECT id, name, created_by, created_at FROM classes ORDER BY created_at DESC LIMIT $1 OFFSET $2"#
+        )
+        .bind(pagination.limit_or_default(20))
+        .bind(pagination.skip_or_default())
+        .fetch_all(&self.db.pool)
+        .await?;
 
         let classes = rows
             .into_iter()
@@ -87,10 +105,11 @@ impl ClassService {
 
     pub async fn create_class_member(&self, request: CreateClassMemberRequest) -> AppResult<()> {
         sqlx::query(
-            r#"INSERT INTO class_members (user_id, class_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"#,
+            r#"INSERT INTO class_members (user_id, class_id, created_at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING"#,
         )
         .bind(&request.user_id)
         .bind(&request.class_id)
+        .bind(Utc::now())
         .execute(&self.db.pool)
         .await?;
         Ok(())

@@ -3,7 +3,7 @@ use crate::errors::{AppError, AppResult};
 use crate::middleware::auth::AuthUser;
 use crate::models::user::UserRole;
 use crate::services::class::ClassService;
-use axum::{Extension, extract::Path, extract::State, response::Json};
+use axum::{Extension, extract::Path, extract::Query, extract::State, response::Json};
 use serde_json::{Value, json};
 use uuid::Uuid;
 use validator::Validate;
@@ -14,12 +14,15 @@ use crate::models::class::{
 };
 use crate::require_role;
 use crate::services::user::UserService;
-use crate::utils::jwt::JwtService;
+use crate::utils::{jwt::JwtService, pagination::Pagination};
 
 impl ClassHandlers {
-    pub async fn get_classes(State(state): State<AppState>) -> AppResult<Json<Value>> {
+    pub async fn get_classes(
+        State(state): State<AppState>,
+        Query(pagination): Query<Pagination>,
+    ) -> AppResult<Json<Value>> {
         let class_service = ClassService::new(state.db.clone());
-        let class = class_service.get_classes().await?;
+        let class = class_service.get_classes_paged(&pagination).await?;
 
         Ok(Json(json!({
             "message": "Classes retrieved successfully",

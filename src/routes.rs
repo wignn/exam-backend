@@ -1,4 +1,4 @@
-use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers};
+use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers, exam::ExamHandlers};
 use crate::middleware::auth::auth_middleware;
 use crate::{AppState};
 use axum::{
@@ -26,6 +26,7 @@ fn api_routes(state: AppState) -> Router<AppState> {
         .nest("/auth", auth_routes())
         .nest("/users", user_routes(state.clone()))
         .nest("/classes", classes_routes(state.clone()))
+        .nest("/exams", exams_routes(state.clone()))
 }
 
 fn auth_routes() -> Router<AppState> {
@@ -63,6 +64,22 @@ fn classes_routes(state: AppState) -> Router<AppState> {
             auth_middleware,
         ))
 }
+
+fn exams_routes(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/", post(ExamHandlers::create_exam))
+        .route("/", get(ExamHandlers::get_exams))
+        .route("/{exam_id}", get(ExamHandlers::get_exam_by_id))
+        .route("/{exam_id}", put(ExamHandlers::update_exam))
+        .route("/{exam_id}", delete(ExamHandlers::delete_exam))
+        .route("/assignments", post(ExamHandlers::assign_exam_to_class))
+        .route("/assignments", delete(ExamHandlers::unassign_exam_from_class))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        ))
+}
+
 async fn health_check() -> &'static str {
     "OK"
 }

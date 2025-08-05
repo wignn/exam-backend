@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS classes (
 CREATE TABLE IF NOT EXISTS class_members (
     user_id  UUID REFERENCES users (id),
     class_id UUID REFERENCES classes (id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, class_id)
     );
 
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS exams (
 CREATE TABLE IF NOT EXISTS exam_assignments (
     exam_id  UUID REFERENCES exams (id),
     class_id UUID REFERENCES classes (id),
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (exam_id, class_id)
     );
 
@@ -56,7 +58,8 @@ CREATE TABLE IF NOT EXISTS choices (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     question_id UUID REFERENCES questions (id) ON DELETE CASCADE,
     choice_text TEXT NOT NULL,
-    is_correct  BOOLEAN DEFAULT FALSE
+    is_correct  BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
 
 CREATE TABLE IF NOT EXISTS exam_attempts (
@@ -80,17 +83,11 @@ CREATE TABLE IF NOT EXISTS answers (
 
 
 
-ALTER TABLE users
-ALTER COLUMN created_at TYPE TIMESTAMPTZ,
-ALTER COLUMN updated_at TYPE TIMESTAMPTZ;
 
-ALTER TABLE classes
-ALTER COLUMN created_at TYPE TIMESTAMPTZ;
-
-ALTER TABLE exams
-ALTER COLUMN start_time TYPE TIMESTAMPTZ,
-ALTER COLUMN end_time TYPE TIMESTAMPTZ;
-
-ALTER TABLE exam_attempts
-ALTER COLUMN started_at TYPE TIMESTAMPTZ,
-ALTER COLUMN submitted_at TYPE TIMESTAMPTZ;
+CREATE INDEX idx_class_members_user_id ON class_members(user_id);
+CREATE INDEX idx_class_members_class_id ON class_members(class_id);
+CREATE INDEX idx_questions_exam_id ON questions(exam_id);
+CREATE INDEX idx_choices_question_id ON choices(question_id);
+CREATE INDEX idx_exam_assignments_exam_id ON exam_assignments(exam_id);
+CREATE INDEX idx_exam_assignments_class_id ON exam_assignments(class_id);
+CREATE INDEX idx_exam_attempts_user_id ON exam_attempts(user_id);

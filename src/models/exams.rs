@@ -9,7 +9,7 @@ pub struct Exam {
     pub id: Uuid,
     pub title: String,
     pub description: String,
-    pub created_by: String,
+    pub created_by: Uuid,
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -22,8 +22,6 @@ pub struct CreateExamRequest {
     pub title: String,
     #[validate(length(min = 1))]
     pub description: String,
-    #[validate(length(min = 1))]
-    pub created_by: String,
     #[validate(range(min = 1))]
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
@@ -48,7 +46,7 @@ pub struct ExamResponse {
     pub id: Uuid,
     pub title: String,
     pub description: String,
-    pub created_by: String,
+    pub created_by: Uuid,
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -75,11 +73,19 @@ pub struct ExamAssignments {
     pub exam_id: Uuid,
     pub class_id: Uuid,
 }
-#[derive(Debug, Deserialize, Clone)]
+
+#[derive(Debug, Deserialize, Clone, Validate)]
 pub struct CreateExamAssignmentRequest {
     pub exam_id: Uuid,
     pub class_id: Uuid,
 }
+#[derive(Debug, Deserialize, Clone)]
+pub struct DeleteExamAssignmentRequest {
+    pub exam_id: Uuid,
+    pub class_id: Uuid,
+}
+
+
 
 #[derive(Debug, Serialize, Clone)]
 pub struct ExamAssignmentsResponse {
