@@ -25,7 +25,12 @@ impl ExamHandlers {
 
         Ok(Json(json!({
             "message": "Exams retrieved successfully",
-            "exams": exams
+            "data": exams,
+            "pagination": {
+                "limit": pagination.limit_or_default(20),
+                "skip": pagination.skip_or_default(),
+                "page": pagination.page_or_default(),
+            }
         })))
     }
 

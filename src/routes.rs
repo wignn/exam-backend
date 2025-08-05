@@ -1,4 +1,4 @@
-use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers, exam::ExamHandlers};
+use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers, exam::ExamHandlers, exam_attempt::ExamAttemptHandler, question::QuestionHandler};
 use crate::middleware::auth::auth_middleware;
 use crate::{AppState};
 use axum::{
@@ -27,6 +27,8 @@ fn api_routes(state: AppState) -> Router<AppState> {
         .nest("/users", user_routes(state.clone()))
         .nest("/classes", classes_routes(state.clone()))
         .nest("/exams", exams_routes(state.clone()))
+        .nest("/exam-attempts", exam_attempts_routes(state.clone()))
+        .nest("/questions", questions_routes(state.clone()))
 }
 
 fn auth_routes() -> Router<AppState> {
@@ -74,6 +76,36 @@ fn exams_routes(state: AppState) -> Router<AppState> {
         .route("/{exam_id}", delete(ExamHandlers::delete_exam))
         .route("/assignments", post(ExamHandlers::assign_exam_to_class))
         .route("/assignments", delete(ExamHandlers::unassign_exam_from_class))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        ))
+}
+
+fn exam_attempts_routes(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/start", post(ExamAttemptHandler::start_exam_attempt))
+        .route("/submit", post(ExamAttemptHandler::submit_exam_attempt))
+        .route("/my-attempts", get(ExamAttemptHandler::get_user_attempts))
+        .route("/details/{attempt_id}", get(ExamAttemptHandler::get_attempt_with_answers))
+        .route("/exam/{exam_id}", get(ExamAttemptHandler::get_exam_attempts)) // for teachers
+        .route("/active/{exam_id}", get(ExamAttemptHandler::get_active_attempt))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        ))
+}
+
+fn questions_routes(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/exam/{exam_id}", post(QuestionHandler::create_question)) // Create question for exam
+        .route("/exam/{exam_id}/teacher", get(QuestionHandler::get_questions_by_exam)) // Teacher view with answers
+        .route("/exam/{exam_id}/student", get(QuestionHandler::get_questions_for_student)) // Student view
+        .route("/{question_id}", get(QuestionHandler::get_question_by_id)) // Get single question
+        .route("/{question_id}", put(QuestionHandler::update_question)) // Update question
+        .route("/{question_id}", delete(QuestionHandler::delete_question)) // Delete question
+        .route("/bulk", post(QuestionHandler::bulk_create_questions)) // Bulk create questions
+        .route("/exam/{exam_id}/total-score", get(QuestionHandler::get_exam_total_score)) // Get total score
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,

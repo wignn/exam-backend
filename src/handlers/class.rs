@@ -22,11 +22,16 @@ impl ClassHandlers {
         Query(pagination): Query<Pagination>,
     ) -> AppResult<Json<Value>> {
         let class_service = ClassService::new(state.db.clone());
-        let class = class_service.get_classes_paged(&pagination).await?;
+        let class = class_service.get_classes(&pagination).await?;
 
         Ok(Json(json!({
             "message": "Classes retrieved successfully",
-            "class": class
+            "data": class,
+            "pagination": {
+                "limit": pagination.limit_or_default(20),
+                "skip": pagination.skip_or_default(),
+                "page": pagination.page_or_default(),
+            }
         })))
     }
 
@@ -45,7 +50,7 @@ impl ClassHandlers {
         Ok(Json(json!({
 
             "message": "Class created successfully" ,
-            "class":  class
+            "data": class
         })))
     }
 
@@ -57,8 +62,8 @@ impl ClassHandlers {
         let class = class_service.get_class_by_id(class_id).await?;
         Ok(Json(json!({
             "message": "Class retrieved successfully",
-            "class": class}
-        )))
+            "data": class
+        })))
     }
 
     pub async fn update_class(
@@ -76,12 +81,11 @@ impl ClassHandlers {
             .await
             .map_err(|_| AppError::NotFound("Class not found".to_string()))?;
 
-
         let class = class_service.update_class(class_id, request).await?;
 
         Ok(Json(json!({
             "message":"Class update successfully",
-            "class": class
+            "data": class
         })))
     }
 
@@ -154,6 +158,6 @@ impl ClassHandlers {
 
         Ok(Json(json!(
             {
-            "users": users})))
+            "data": users})))
     }
 }

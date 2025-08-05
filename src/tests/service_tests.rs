@@ -1,7 +1,5 @@
 #[cfg(test)]
 mod service_tests {
-    use crate::services::class::ClassService;
-    use crate::services::exam::ExamService;
     use crate::models::class::{CreateClassRequest, UpdateClassRequest};
     use crate::models::exams::{CreateExamRequest, UpdateExamRequest};
     use crate::utils::pagination::Pagination;
@@ -15,6 +13,7 @@ mod service_tests {
         let pagination = Pagination {
             limit: Some(10),
             skip: Some(20),
+            page: None,
         };
 
         // Test that pagination parameters are correctly processed
@@ -56,8 +55,7 @@ mod service_tests {
 
         let valid_create_request = CreateExamRequest {
             title: "Final Examination".to_string(),
-            description: Some("Comprehensive final exam covering all topics".to_string()),
-            created_by: Uuid::new_v4(),
+            description: "A comprehensive final exam".to_string(),
             duration_minutes: 180,
             start_time,
             end_time,
@@ -66,7 +64,7 @@ mod service_tests {
 
         let valid_update_request = UpdateExamRequest {
             title: "Updated Final Exam".to_string(),
-            description: Some("Updated exam description".to_string()),
+            description:    "Updated description".to_string(),
             duration_minutes: 200,
             start_time,
             end_time,
@@ -97,6 +95,7 @@ mod service_tests {
         let zero_pagination = Pagination {
             limit: Some(0),
             skip: Some(0),
+            page: None, // No page specified
         };
         assert_eq!(zero_pagination.limit_or_default(10), 0);
         assert_eq!(zero_pagination.skip_or_default(), 0);
@@ -104,6 +103,7 @@ mod service_tests {
         let large_pagination = Pagination {
             limit: Some(10000),
             skip: Some(1000000),
+            page: None, // No page specified
         };
         assert_eq!(large_pagination.limit_or_default(10), 10000);
         assert_eq!(large_pagination.skip_or_default(), 1000000);
@@ -112,6 +112,7 @@ mod service_tests {
         let negative_pagination = Pagination {
             limit: Some(-5),
             skip: Some(-10),
+            page: None, // No page specified
         };
         assert_eq!(negative_pagination.limit_or_default(10), -5);
         assert_eq!(negative_pagination.skip_or_default(), -10);
@@ -152,8 +153,7 @@ mod service_tests {
             // Verify the exam request would be valid
             let exam_request = CreateExamRequest {
                 title: format!("Exam {} minutes", duration_min),
-                description: Some(format!("This exam lasts {} minutes", duration_min)),
-                created_by: Uuid::new_v4(),
+                description: "A test exam".to_string(),
                 duration_minutes: duration_min as i32,
                 start_time,
                 end_time,
@@ -208,5 +208,12 @@ mod service_tests {
                 }
             }
         }
+    }
+
+    #[tokio::test]
+    async fn test_placeholder() {
+        // Placeholder test to avoid unused import warnings
+        let id = Uuid::new_v4();
+        assert!(id != Uuid::nil());
     }
 }

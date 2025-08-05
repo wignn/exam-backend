@@ -8,6 +8,10 @@ mod services;
 mod utils;
 mod routes;
 
+#[cfg(test)]
+mod tests;
+
+
 use axum::{
     http::{header, Method},
 };

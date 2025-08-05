@@ -37,20 +37,8 @@ impl ClassService {
         Ok(class.into())
     }
 
-    pub async fn get_classes(&self) -> AppResult<Vec<ClassResponse>> {
-        let rows = sqlx::query(r#"SELECT id, name, created_by, created_at FROM classes"#)
-            .fetch_all(&self.db.pool)
-            .await?;
 
-        let classes = rows
-            .into_iter()
-            .map(|row| self.row_to_class(row).unwrap().into())
-            .collect();
-
-        Ok(classes)
-    }
-
-    pub async fn get_classes_paged(&self, pagination: &pagination::Pagination) -> AppResult<Vec<ClassResponse>> {
+    pub async fn get_classes(&self, pagination: &pagination::Pagination) -> AppResult<Vec<ClassResponse>> {
         let rows = sqlx::query(
             r#"SELECT id, name, created_by, created_at FROM classes ORDER BY created_at DESC LIMIT $1 OFFSET $2"#
         )
