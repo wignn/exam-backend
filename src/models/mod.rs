@@ -3,3 +3,4 @@ pub mod class;
 pub mod exams;
 pub mod attempt;
 pub mod question;
+pub mod progress;

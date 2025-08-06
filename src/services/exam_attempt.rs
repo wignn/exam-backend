@@ -4,6 +4,8 @@ use crate::models::attempt::{
     Answer, AnswerResponse, ExamAttempt, ExamAttemptResponse,
     ExamAttemptWithAnswers, StartExamAttemptRequest, SubmitExamAttemptRequest,
 };
+use crate::models::progress::{CourseType, CreateProgressRequest, ProgressStatus, UpdateProgressRequest};
+use crate::services::progress::ProgressService;
 use chrono::Utc;
 use sqlx::{postgres::PgRow, Row};
 use uuid::Uuid;
@@ -24,16 +26,17 @@ impl ExamAttemptService {
         user_id: Uuid,
     ) -> AppResult<ExamAttemptResponse> {
         // Check if exam exists and is active
-        let exam_exists = sqlx::query(
-            "SELECT id FROM exams WHERE id = $1 AND is_active = true AND start_time <= NOW() AND end_time >= NOW()"
+        let exam_row = sqlx::query(
+            "SELECT id, title FROM exams WHERE id = $1 AND is_active = true AND start_time <= NOW() AND end_time >= NOW()"
         )
         .bind(request.exam_id)
         .fetch_optional(&self.db.pool)
         .await?;
 
-        if exam_exists.is_none() {
-            return Err(AppError::NotFound("Exam not found or not active".to_string()));
-        }
+        let exam_title = match exam_row {
+            Some(row) => row.get::<String, _>("title"),
+            None => return Err(AppError::NotFound("Exam not found or not active".to_string())),
+        };
 
         // Check if user has access to this exam (through class assignments)
         let has_access = sqlx::query(
@@ -80,6 +83,13 @@ impl ExamAttemptService {
         .await?;
 
         let attempt = self.row_to_exam_attempt(row)?;
+        
+        // Create progress entry for starting the exam
+        if let Err(e) = self.create_exam_progress(user_id, exam_title).await {
+            // Log the error but don't fail the exam start
+            eprintln!("Failed to create progress entry: {}", e);
+        }
+        
         Ok(attempt.into())
     }
 
@@ -108,7 +118,7 @@ impl ExamAttemptService {
 
         // Check if exam time has expired
         let exam_row = sqlx::query(
-            "SELECT end_time, duration_minutes FROM exams WHERE id = $1"
+            "SELECT end_time, duration_minutes, title FROM exams WHERE id = $1"
         )
         .bind(attempt.exam_id)
         .fetch_one(&self.db.pool)
@@ -116,6 +126,7 @@ impl ExamAttemptService {
 
         let end_time: chrono::DateTime<Utc> = exam_row.get("end_time");
         let duration_minutes: i32 = exam_row.get("duration_minutes");
+        let exam_title: String = exam_row.get("title");
         
         let now = Utc::now();
         let max_end_time = attempt.started_at.unwrap() + chrono::Duration::minutes(duration_minutes as i64);
@@ -123,6 +134,16 @@ impl ExamAttemptService {
         if now > end_time || now > max_end_time {
             return Err(AppError::BadRequest("Exam time has expired".to_string()));
         }
+
+        // Get maximum possible score for the exam
+        let max_score_row = sqlx::query(
+            "SELECT COALESCE(SUM(score), 0) as max_score FROM questions WHERE exam_id = $1"
+        )
+        .bind(attempt.exam_id)
+        .fetch_one(&self.db.pool)
+        .await?;
+        
+        let max_score: i32 = max_score_row.get("max_score");
 
         // Start transaction
         let mut tx = self.db.pool.begin().await?;
@@ -198,6 +219,13 @@ impl ExamAttemptService {
         tx.commit().await?;
 
         let updated_attempt = self.row_to_exam_attempt(updated_row)?;
+        
+        // Update progress entry for completing the exam
+        if let Err(e) = self.update_exam_progress(user_id, exam_title, total_score, max_score).await {
+            // Log the error but don't fail the exam submission
+            eprintln!("Failed to update progress entry: {}", e);
+        }
+        
         Ok(updated_attempt.into())
     }
 
@@ -343,5 +371,68 @@ impl ExamAttemptService {
             is_correct: row.get("is_correct"),
             score_awarded: row.get("score_awarded"),
         })
+    }
+
+    /// Create progress entry when exam attempt starts
+    async fn create_exam_progress(&self, user_id: Uuid, exam_title: String) -> AppResult<()> {
+        let progress_service = ProgressService::new(self.db.clone());
+        let progress_request = CreateProgressRequest {
+            course_name: exam_title,
+            course_type: CourseType::Exam,
+            status: ProgressStatus::Started,
+            total_score: None,
+            max_score: None,
+            experience_points: Some(0), // No experience for starting
+        };
+
+        progress_service.create_progress(user_id, progress_request).await?;
+        Ok(())
+    }
+
+    /// Update progress when exam attempt is completed
+    async fn update_exam_progress(&self, user_id: Uuid, exam_title: String, total_score: i32, max_score: i32) -> AppResult<()> {
+        let progress_service = ProgressService::new(self.db.clone());
+        
+        // Find the progress entry for this exam
+        let progress_list = progress_service.get_user_progress(user_id, Some(50)).await?;
+        
+        if let Some(progress) = progress_list.iter().find(|p| p.course_name == exam_title && p.course_type == CourseType::Exam) {
+            let progress_percentage = if max_score > 0 {
+                Some((total_score * 100) / max_score)
+            } else {
+                None
+            };
+
+            // Calculate experience based on score
+            let experience_points = self.calculate_exam_experience(total_score, max_score);
+
+            let update_request = UpdateProgressRequest {
+                progress_percentage,
+                status: ProgressStatus::Completed,
+                total_score: Some(total_score),
+                completed_at: Some(Utc::now()),
+                experience_points: Some(experience_points),
+            };
+
+            progress_service.update_progress(progress.id, user_id, update_request).await?;
+        }
+        
+        Ok(())
+    }
+
+    /// Calculate experience points based on exam performance
+    fn calculate_exam_experience(&self, total_score: i32, max_score: i32) -> i32 {
+        if max_score == 0 {
+            return 50; // Base experience for completion
+        }
+
+        let percentage = (total_score * 100) / max_score;
+        match percentage {
+            90..=100 => 200, // Excellent
+            80..=89 => 150,  // Good
+            70..=79 => 100,  // Average
+            60..=69 => 75,   // Below average
+            _ => 50,         // Poor but completed
+        }
     }
 }

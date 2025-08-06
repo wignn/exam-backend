@@ -1,4 +1,4 @@
-use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers, exam::ExamHandlers, exam_attempt::ExamAttemptHandler, question::QuestionHandler};
+use crate::handlers::{auth::AuthHandlers, class::ClassHandlers, user::UserHandlers, exam::ExamHandlers, exam_attempt::ExamAttemptHandler, question::QuestionHandler, progress::ProgressHandler};
 use crate::middleware::auth::auth_middleware;
 use crate::{AppState};
 use axum::{
@@ -29,6 +29,7 @@ fn api_routes(state: AppState) -> Router<AppState> {
         .nest("/exams", exams_routes(state.clone()))
         .nest("/exam-attempts", exam_attempts_routes(state.clone()))
         .nest("/questions", questions_routes(state.clone()))
+        .nest("/progress", progress_routes(state.clone()))
 }
 
 fn auth_routes() -> Router<AppState> {
@@ -106,6 +107,22 @@ fn questions_routes(state: AppState) -> Router<AppState> {
         .route("/{question_id}", delete(QuestionHandler::delete_question))
         .route("/bulk", post(QuestionHandler::bulk_create_questions)) 
         .route("/exam/{exam_id}/total-score", get(QuestionHandler::get_exam_total_score)) 
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        ))
+}
+
+fn progress_routes(state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/", post(ProgressHandler::create_progress))
+        .route("/{progress_id}", put(ProgressHandler::update_progress))
+        .route("/my-progress", get(ProgressHandler::get_user_progress))
+        .route("/my-level", get(ProgressHandler::get_user_level))
+        .route("/summary", get(ProgressHandler::get_progress_summary))
+        .route("/user/{user_id}/progress", get(ProgressHandler::get_user_progress_by_id)) // Teachers only
+        .route("/user/{user_id}/level", get(ProgressHandler::get_user_level_by_id)) // Teachers only
+        .route("/leaderboard", get(ProgressHandler::get_leaderboard))
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,
