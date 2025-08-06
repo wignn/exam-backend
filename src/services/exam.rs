@@ -20,8 +20,9 @@ impl ExamService {
     pub async fn create_exam(&self, request: CreateExamRequest, created_by: Uuid) -> AppResult<ExamResponse> {
         let row = sqlx::query(
             r#"
-Insert Into exams (title, description, created_by, duration_minutes, start_time, end_time, is_active)
-VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by, duration_minutes, start_time, end_time, is_active
+INSERT INTO exams (title, description, created_by, duration_minutes, start_time, end_time, is_active, category, difficulty)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+RETURNING id, title, description, created_by, duration_minutes, start_time, end_time, is_active, category, difficulty
             "#)
             .bind(&request.title)
             .bind(&request.description)
@@ -30,6 +31,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by
             .bind(&request.start_time)
             .bind(&request.end_time)
             .bind(true)
+            .bind(&request.category)
+            .bind(&request.difficulty)
             .fetch_one(&self.db.pool)
             .await?;
 
@@ -57,11 +60,10 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by
     pub async fn get_exams(&self, pagination: &crate::utils::pagination::Pagination) -> AppResult<Vec<ExamResponse>> {
         let rows = sqlx::query(
             r#"
-
-    SELECT id, title, description, created_by, duration_minutes, start_time, end_time, is_active
-    FROM exams
-    ORDER BY start_time DESC
-    LIMIT $1 OFFSET $2
+SELECT id, title, description, created_by, duration_minutes, start_time, end_time, is_active, category, difficulty
+FROM exams
+ORDER BY start_time DESC
+LIMIT $1 OFFSET $2
     "#,
         )
         .bind(pagination.limit_or_default(20))
@@ -79,7 +81,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by
     pub async fn get_exam_by_id(&self, id: Uuid) -> AppResult<ExamResponse> {
         let row = sqlx::query(
             r#"
-            SELECT id, title, description, created_by, duration_minutes, start_time, end_time, is_active
+            SELECT id, title, description, created_by, duration_minutes, start_time, end_time, is_active, category, difficulty
             FROM exams
             WHERE id = $1
             "#)
@@ -100,9 +102,9 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by
         let row = sqlx::query(
         r#"
         UPDATE exams
-        SET title = $1, description = $2, duration_minutes = $3, start_time = $4, end_time = $5, isActive = $6
-        WHERE id = $7
-        RETURNING id, title, description, created_by, duration_minutes, start_time, end_time, isActive
+        SET title = $1, description = $2, duration_minutes = $3, start_time = $4, end_time = $5, is_active = $6, category = $7, difficulty = $8
+        WHERE id = $9
+        RETURNING id, title, description, created_by, duration_minutes, start_time, end_time, is_active, category, difficulty
         "#
     )
     .bind(&request.title)
@@ -111,6 +113,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by
     .bind(&request.start_time)
     .bind(&request.end_time)
     .bind(&request.is_active)
+    .bind(&request.category)
+    .bind(&request.difficulty)
     .bind(id)
     .fetch_one(&self.db.pool)
     .await?;
@@ -181,6 +185,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, title, description, created_by
             start_time: row.get("start_time"),
             end_time: row.get("end_time"),
             is_active: row.get("is_active"),
+            category: row.get("category"),
+            difficulty: row.get("difficulty"),
         })
     }
 

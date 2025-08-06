@@ -35,7 +35,9 @@ CREATE TABLE IF NOT EXISTS exams (
     duration_minutes INTEGER   NOT NULL,
     start_time       TIMESTAMPTZ NOT NULL,
     end_time         TIMESTAMPTZ NOT NULL,
-    is_active        BOOLEAN     DEFAULT TRUE
+    is_active        BOOLEAN     DEFAULT TRUE,
+    category         TEXT        NOT NULL,
+    difficulty     TEXT        NOT NULL
     );
 
 CREATE TABLE IF NOT EXISTS exam_assignments (

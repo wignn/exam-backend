@@ -35,6 +35,8 @@ mod exam_handler_tests {
             duration_minutes: 120,
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(3),
+            category: "Computer Science".to_string(),
+            difficulty: "Intermediate".to_string(),
         };
         assert!(valid_request.validate().is_ok());
 
@@ -44,6 +46,8 @@ mod exam_handler_tests {
             duration_minutes: 0, // Zero duration should fail
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(3),
+            category: "Computer Science".to_string(),
+            difficulty: "Intermediate".to_string(),
         };
         assert!(invalid_request.validate().is_err());
     }
@@ -58,6 +62,8 @@ mod exam_handler_tests {
             duration_minutes: 90,
             start_time: now + Duration::hours(2),
             end_time: now + Duration::hours(3),
+            category: "Computer Science".to_string(),
+            difficulty: "Advanced".to_string(),
         };
         assert!(valid_request.validate().is_ok());
 
@@ -68,6 +74,8 @@ mod exam_handler_tests {
             duration_minutes: 0, // Zero duration should fail
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(2),
+            category: "Computer Science".to_string(),
+            difficulty: "Advanced".to_string(),
         };
         assert!(invalid_request.validate().is_err());
     }
@@ -146,6 +154,8 @@ mod exam_handler_tests {
             duration_minutes: 60,
             start_time: now + Duration::hours(2),
             end_time: now + Duration::hours(3),
+            category: "Mathematics".to_string(),
+            difficulty: "Easy".to_string(),
         };
         assert!(future_exam.validate().is_ok());
         assert!(future_exam.start_time < future_exam.end_time);
@@ -157,6 +167,8 @@ mod exam_handler_tests {
             duration_minutes: 60,
             start_time: now - Duration::hours(1),
             end_time: now + Duration::hours(1),
+            category: "Mathematics".to_string(),
+            difficulty: "Easy".to_string(),
         };
         assert!(past_exam.validate().is_ok());
     }
@@ -172,6 +184,8 @@ mod exam_handler_tests {
             duration_minutes: 5,
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(2),
+            category: "General".to_string(),
+            difficulty: "Easy".to_string(),
         };
         assert!(short_exam.validate().is_ok());
         assert_eq!(short_exam.duration_minutes, 5);
@@ -183,6 +197,8 @@ mod exam_handler_tests {
             duration_minutes: 240, // 4 hours
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(5),
+            category: "Computer Science".to_string(),
+            difficulty: "Hard".to_string(),
         };
         assert!(long_exam.validate().is_ok());
         assert_eq!(long_exam.duration_minutes, 240);
@@ -199,6 +215,8 @@ mod exam_handler_tests {
             duration_minutes: 90,
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(2),
+            category: "Literature".to_string(),
+            difficulty: "Medium".to_string(),
         };
         assert!(with_long_content.validate().is_ok());
         assert!(!with_long_content.title.is_empty());
@@ -211,6 +229,8 @@ mod exam_handler_tests {
             duration_minutes: 15,
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(2),
+            category: "General".to_string(),
+            difficulty: "Easy".to_string(),
         };
         assert!(minimal_exam.validate().is_ok());
     }
@@ -248,6 +268,8 @@ mod exam_handler_tests {
             duration_minutes: 60,
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(2),
+            category: "Science".to_string(),
+            difficulty: "Medium".to_string(),
         };
         assert_eq!(active_exam.is_active, true);
 
@@ -258,6 +280,8 @@ mod exam_handler_tests {
             duration_minutes: 60,
             start_time: now + Duration::hours(1),
             end_time: now + Duration::hours(2),
+            category: "Science".to_string(),
+            difficulty: "Medium".to_string(),
         };
         assert_eq!(inactive_exam.is_active, false);
     }

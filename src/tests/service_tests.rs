@@ -59,6 +59,8 @@ mod service_tests {
             duration_minutes: 180,
             start_time,
             end_time,
+            category: "Computer Science".to_string(),
+            difficulty: "Hard".to_string(),
         };
         assert!(valid_create_request.validate().is_ok());
 
@@ -69,6 +71,8 @@ mod service_tests {
             start_time,
             end_time,
             is_active: true,
+            category: "Computer Science".to_string(),
+            difficulty: "Hard".to_string(),
         };
         assert!(valid_update_request.validate().is_ok());
     }
@@ -157,6 +161,8 @@ mod service_tests {
                 duration_minutes: duration_min as i32,
                 start_time,
                 end_time,
+                category: "General".to_string(),
+                difficulty: "Medium".to_string(),
             };
             assert!(exam_request.validate().is_ok());
         }

@@ -14,6 +14,8 @@ pub struct Exam {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
     pub is_active: bool,
+    pub category: String,
+    pub difficulty: String
 }
 
 #[derive(Debug, Deserialize, Validate)]
@@ -26,6 +28,8 @@ pub struct CreateExamRequest {
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
+    pub category: String,
+    pub difficulty: String,
 }
 
 #[derive(Debug, Deserialize, Validate)]
@@ -39,6 +43,8 @@ pub struct UpdateExamRequest {
     pub duration_minutes: i32,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
+    pub category: String,
+    pub difficulty: String
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -51,6 +57,8 @@ pub struct ExamResponse {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
     pub is_active: bool,
+    pub category: String,
+    pub difficulty: String,
 }
 
 impl From<Exam> for ExamResponse {
@@ -64,6 +72,8 @@ impl From<Exam> for ExamResponse {
             start_time: exam.start_time,
             end_time: exam.end_time,
             is_active: exam.is_active,
+            category: exam.category,
+            difficulty: exam.difficulty,
         }
     }
 }
