@@ -4,13 +4,13 @@ The exam application backend is built using Rust with the Axum framework. The ap
 ## Fitur
 
 ### User Management
-- ✅ Register user (admin, teacher, student)
-- ✅ Login with email/password
-- ✅ JWT access token And refresh token
-- ✅ Update profile
-- ✅ Change Password
-- ✅ Verification email
-- ✅ Role-based access control
+- Register user (admin, teacher, student)
+- Login with email/password
+- JWT access token And refresh token
+- Update profile
+- Change Password
+- Verification email
+- Role-based access control
 
 ### Security
 - Password hashing with bcrypt
